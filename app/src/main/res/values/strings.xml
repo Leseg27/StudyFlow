@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">StudyFlow</string>
+    <string name="splash_tagline">PLAN · STUDY · ACHIEVE</string>
+
+    <string name="login_title">Welcome back</string>
+    <string name="login_subtitle">Sign in to continue your study flow</string>
+    <string name="hint_email">Email address</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_confirm_password">Confirm password</string>
+    <string name="action_login">Log in</string>
+    <string name="action_register">Create account</string>
+    <string name="go_to_register">Don\'t have an account? Register</string>
+    <string name="go_to_login">Already have an account? Log in</string>
+    <string name="register_title">Create your account</string>
+    <string name="register_subtitle">Start organising your studies today</string>
+
+    <string name="error_invalid_email">Please enter a valid email address</string>
+    <string name="error_short_password">Password must be at least 6 characters</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+
+    <string name="dashboard_welcome">Welcome to StudyFlow</string>
+</resources>
