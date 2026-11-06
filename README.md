@@ -1,419 +1,128 @@
-# StudyFlow
+# StudyFlow - Advanced Productivity & Cloud Sync App
 
-**A focused Android academic productivity app for students.**
+**Student Name:** Lesego Mathe More  
+**Student Number:** ST10451027  
+**Course:** OPSC6312  
+**Assessment:** Final PoE (Part 3)  
 
-StudyFlow helps secondary-school, college, and university students organise
-their academic responsibilities in one place — tasks, subjects, study sessions,
-progress, and reminders — with offline-first local storage.
+**Video Demonstration:** **[INSERT YOUR YOUTUBE LINK HERE]** *(Note: Video is unlisted and demonstrates the app running on a physical device).*
 
-Built with **Kotlin**, **Jetpack Compose**, and **Room (SQLite)**.
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-039BE5?style=for-the-badge&logo=Firebase&logoColor=white)
 
----
+## Introduction
+StudyFlow is an advanced, cloud-connected Android academic productivity application developed to help students manage their academic responsibilities in one centralised app.
 
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Features](#features)
-3. [Tech Stack](#tech-stack)
-4. [Project Structure](#project-structure)
-5. [Architecture](#architecture)
-6. [Database Schema](#database-schema)
-7. [Getting Started](#getting-started)
-8. [Building & Running](#building--running)
-9. [Testing the App](#testing-the-app)
-10. [Version Compatibility](#version-compatibility)
-11. [Roadmap](#roadmap)
-12. [Known Limitations](#known-limitations)
-13. [Author](#author)
-14. [License](#license)
+Building upon the Part 2 prototype, this Final PoE version transforms the app into a fully-featured, modern application. It incorporates Firebase Authentication (SSO), Cloud Firestore for data syncing, advanced study tools (Pomodoro Focus Mode and 3D Flashcards), multi-language support, and local push notifications. The app uses an offline-first architecture, meaning it works perfectly without internet, and automatically syncs to the cloud once the device reconnects.
 
 ---
 
-## Overview
+## Feature Highlights
 
-Existing student planners (My Study Life, Student Task Planner, Tractivity)
-demonstrate that successful academic tools combine **task management**,
-**scheduling**, **study tracking**, and **progress feedback**. StudyFlow
-distils these into a focused, offline-first app without the bloat of
-commercial alternatives.
-
-The app was designed around three principles:
-
-- **Simplicity** — a small number of clearly organised features
-- **Offline-first** — everything works without internet, local SQLite is the source of truth
-- **Student-focused** — tasks, subjects, study sessions, and progress in one place
+*   **Firebase Integration:**
+    *   **SSO:** Secure Google Sign-In using Firebase Authentication.
+    *   **Offline Sync:** WorkManager and Firebase Firestore handle the upload of `PENDING` tasks when the device reconnects to the internet.
+*   **Dashboard:** A modern home screen featuring a Daily Streak tracker, daily study goal progress, and quick stats.
+*   **Task & Subject Manager:** Create, edit, and delete tasks with swipe-to-delete functionality and color-coded subjects.
+*   **Pomodoro Timer:** A 25-minute countdown timer with a circular progress animation. Includes a toggle for looping rain sounds, and upon completion, it saves the session and triggers a confetti animation.
+*   **3D Flip Flashcards:** Users can create flashcards linked to subjects. Features a smooth 3D flip animation (`rotationY`) to reveal answers and swipe gestures to track learning progress.
+*   **Multi-Language Support:** Switch between English, isiZulu, and Sesotho directly in the Settings screen using `AppCompatDelegate.setApplicationLocales()`.
+*   **Local Notifications:** Uses `AlarmManager` and `NotificationManager` to schedule reminders for upcoming task due dates.
 
 ---
 
-## Features
+## Tech Stack & Architecture
+*   **Language:** Kotlin
+*   **UI Framework:** Jetpack Compose with Material 3
+*   **Architecture:** MVVM (Model-View-ViewModel) + Repository Pattern
+*   **Local Database:** SQLite via Android Room (`studyflow.db`)
+*   **Cloud Backend:** Firebase Auth (SSO) & Cloud Firestore (Data Sync)
+*   **Asynchronous Processing:** Kotlin Coroutines & Flow, WorkManager (for background syncing).
 
-### Authentication (Local)
-- Email + password registration with **salted SHA-256 hashing**
-- Login with input validation and friendly error messages
-- Persistent sessions (auto-login on app restart)
-- Logout with full session cleanup
-
-### Tasks
-- Create, edit, complete, and delete academic tasks
-- Fields: title, description, subject, due date, priority (Low / Med / High)
-- Filter by **All / Upcoming / Completed**
-- Visual priority badges and strike-through on completed items
-- Delete confirmation dialog
-
-### Subjects
-- Create, edit, and delete subjects
-- Fields: name, code, colour (8-colour palette), optional lecturer
-- Colour-coded list for quick identification
-
-### Study Sessions
-- Log study sessions with duration (15 / 25 / 45 min quick-start)
-- Optional subject association and notes
-- **Today's total** and **weekly total** stat tiles
-- Recent sessions list with timestamps
-
-### Dashboard (Home)
-- Live counters for **Pending** and **Completed** tasks
-- Navigation to Tasks, Subjects, Study Sessions, and Settings
-- Quick access to Logout
-
-### Settings
-- Display name
-- Daily study goal (30 / 60 / 90 / 120 min)
-- Preferred language (English / isiZulu / Sesotho)
-- Theme (Dark / Light)
-
-### UI / UX
-- StudyFlow brand: dark blue (`#173B67`) + green (`#2E9B68`)
-- Animated splash: glow → logo fade/scale → app name → tagline
-- Consistent Compose Material 3 design language
-- Empty states, loading indicators, and inline validation everywhere
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Language | Kotlin 2.0.21 |
-| UI | Jetpack Compose + Material 3 |
-| Navigation | Navigation Compose 2.8.0 |
-| Local persistence | Room 2.6.1 (SQLite) |
-| Async | Kotlin Coroutines + Flow |
-| DI | Manual (Application-scoped singletons) |
-| Annotation processing | KSP (Kotlin Symbol Processing) |
-| Build | Gradle 8.x + AGP 8.5.2 |
-| Min SDK | 26 (Android 8.0 Oreo) |
-| Target SDK | 34 (Android 14) |
-
-**No Firebase, no network dependency — the app is fully self-contained.**
-
----
-
-## Project Structure
-
-```
-StudyFlow/
-├── app/
-│   ├── build.gradle.kts
-│   └── src/main/
-│       ├── AndroidManifest.xml
-│       ├── java/com/example/studyflow/
-│       │   ├── MainActivity.kt
-│       │   ├── StudyFlowApp.kt
-│       │   ├── navigation/
-│       │   │   ├── Routes.kt
-│       │   │   └── StudyFlowNavHost.kt
-│       │   ├── data/
-│       │   │   ├── local/
-│       │   │   │   ├── AppDatabase.kt
-│       │   │   │   ├── Converters.kt
-│       │   │   │   ├── UserEntity.kt / UserDao.kt
-│       │   │   │   ├── SessionEntity.kt / SessionDao.kt
-│       │   │   │   ├── TaskEntity.kt / TaskDao.kt
-│       │   │   │   ├── SubjectEntity.kt / SubjectDao.kt
-│       │   │   │   └── StudySessionEntity.kt / StudySessionDao.kt
-│       │   │   ├── repository/
-│       │   │   │   ├── AuthRepository.kt
-│       │   │   │   ├── PasswordHasher.kt
-│       │   │   │   ├── TaskRepository.kt
-│       │   │   │   ├── SubjectRepository.kt
-│       │   │   │   └── StudySessionRepository.kt
-│       │   │   └── prefs/
-│       │   │       └── SessionManager.kt
-│       │   └── ui/
-│       │       ├── theme/
-│       │       ├── components/
-│       │       │   ├── StudyFlowLogo.kt
-│       │       │   └── ColorUtils.kt
-│       │       └── screens/
-│       │           ├── splash/SplashScreen.kt
-│       │           ├── login/LoginScreen.kt
-│       │           ├── register/RegisterScreen.kt
-│       │           ├── home/HomeScreen.kt
-│       │           ├── tasks/
-│       │           ├── subjects/
-│       │           ├── study/
-│       │           └── settings/
-│       └── res/
-│           ├── drawable/
-│           ├── mipmap-anydpi-v26/
-│           ├── values/
-│           ├── values-night/
-│           └── xml/
-├── gradle/libs.versions.toml
-├── build.gradle.kts
-├── settings.gradle.kts
-├── gradle.properties
-└── README.md
+### Hybrid Database Schema (Local Room + Cloud Firestore)
+```mermaid
+erDiagram
+    USER ||--o{ SUBJECT : creates
+    USER ||--o{ TASK : manages
+    USER ||--o{ STUDY_SESSION : records
+    SUBJECT ||--o{ TASK : categorizes
+    SUBJECT ||--o{ FLASHCARD : contains
+   
+    USER {
+        int id PK
+        string email
+        string firebaseUid
+        int dailyGoal
+    }
+    SUBJECT {
+        int id PK
+        int userId FK
+        string name
+        string colorHex
+    }
+    TASK {
+        int id PK
+        int userId FK
+        string title
+        boolean isCompleted
+        string syncStatus "SYNCED, PENDING, FAILED"
+    }
+    STUDY_SESSION {
+        int id PK
+        int userId FK
+        int durationMinutes
+    }
+    FLASHCARD {
+        int id PK
+        int subjectId FK
+        string question
+        string answer
+    }
 ```
 
 ---
 
-## Architecture
-
-StudyFlow follows a **lightweight MVVM + Repository** pattern, all in Kotlin.
-
-```
-┌──────────────────────────┐
-│      Compose UI          │  Screens, sheets, dialogs
-│  (TasksScreen, etc.)     │  Pure declarative UI
-└────────────┬─────────────┘
-             │ collects StateFlow
-             ▼
-┌──────────────────────────┐
-│       ViewModels         │  TaskViewModel, SubjectViewModel,
-│  (AndroidViewModel)      │  StudySessionViewModel, SettingsViewModel
-└────────────┬─────────────┘
-             │ calls suspend functions
-             ▼
-┌──────────────────────────┐
-│      Repositories        │  AuthRepository, TaskRepository,
-│                          │  SubjectRepository, StudySessionRepository
-└────────────┬─────────────┘
-             │ Room DAO calls
-             ▼
-┌──────────────────────────┐
-│       Room / SQLite      │  AppDatabase ("studyflow.db")
-│    + SharedPreferences   │  SessionManager (fast auth check)
-└──────────────────────────┘
-```
-
-**Key patterns used:**
-
-- **Single source of truth:** SQLite via Room.
-- **Flow-based observation:** DAO returns `Flow<List<T>>`; ViewModels expose `StateFlow`.
-- **Session-scoped data:** every query filters by `userId`, so multiple accounts
-  on the same device don't leak data.
-- **Manual DI:** `StudyFlowApp` holds lazy singletons for the database, session
-  manager, and repositories. ViewModels get them via `AndroidViewModel(app)`.
+## Release Notes (Since Part 2 Prototype)
+The following updates were made to transition the Part 2 prototype into the Final PoE submission:
+*   **NEW:** Implemented Firebase Authentication for Google Single Sign-On (SSO).
+*   **NEW:** Integrated Firebase Cloud Firestore and WorkManager to handle Offline Sync (uploading PENDING tasks).
+*   **NEW:** Added Pomodoro Focus Mode with timer, ambient sounds, and confetti animation.
+*   **NEW:** Added 3D Flip Flashcards with swipe gestures for spaced repetition.
+*   **NEW:** Implemented Multi-Language support (English, isiZulu, and Sesotho).
+*   **NEW:** Added Local Push Notifications for task reminders using AlarmManager.
+*   **NEW:** Added custom App Icon and Splash Screen.
+*   **IMPROVEMENT:** Overhauled the entire UI with Material 3.
+*   **FIX:** Optimized Coroutines/Flow to prevent previous UI hanging issues.
 
 ---
 
-## Database Schema
+## AI Tools Declaration
+*(Max 500 words)*
+In compliance with the PoE requirements, Android Studio's built-in Gemini AI was heavily utilised during the development of StudyFlow. AI was used to generate the base project architecture, UI components (circular timer, 3D card flip animations), and Room database structures. The AI also played a crucial role in debugging complex Gradle dependency conflicts, particularly during the setup of Firebase Authentication, Firestore rules, and the WorkManager sync logic. All AI-generated code was manually reviewed, adapted, and thoroughly tested on physical Android devices to ensure it met the specific functional requirements of this project.
 
-Database: `studyflow.db` (Room v3)
+---
 
-### `users`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | Long (PK) | autoGenerate |
-| `email` | String (unique index) | normalised to lowercase |
-| `displayName` | String? | optional |
-| `passwordHash` | String | SHA-256 of password + salt |
-| `salt` | String | per-user random |
-| `createdAt` | Long | epoch millis |
-| `preferredLanguage` | String | "en" / "zu" / "st" |
-| `dailyStudyGoalMinutes` | Int | 30 / 60 / 90 / 120 |
-| `theme` | String | "dark" / "light" |
+## GitHub Actions & Automated Testing
+This repository includes a GitHub Actions workflow (`.github/workflows/build.yml`). It triggers on every push to the `main` branch to automatically build the project (`./gradlew build`) and run unit tests (`./gradlew testDebugUnitTest`), ensuring compilation success in a clean environment. *Note: Google Services JSON is mocked in the CI environment to allow the build to pass without exposing production Firebase keys.*
 
-### `session`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | Int (PK) | always 1 — single active session |
-| `userId` | Long | FK → users.id |
-| `email` | String | for display |
-| `loggedInAt` | Long | epoch millis |
-
-### `tasks`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | Long (PK) | autoGenerate |
-| `userId` | Long | FK → users.id (CASCADE) |
-| `title` | String | required |
-| `description` | String? | optional |
-| `subject` | String? | free text (will become FK later) |
-| `dueDate` | Long? | epoch millis |
-| `priority` | TaskPriority | LOW / MEDIUM / HIGH |
-| `isCompleted` | Boolean | |
-| `completedAt` | Long? | |
-| `createdAt`, `updatedAt` | Long | |
-| `syncStatus` | SyncStatus | SYNCED / PENDING / FAILED |
-
-### `subjects`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | Long (PK) | autoGenerate |
-| `userId` | Long | FK → users.id (CASCADE) |
-| `name` | String | required |
-| `code` | String? | e.g. "CS101" |
-| `colourHex` | String | "#RRGGBB" |
-| `lecturer` | String? | |
-| `createdAt` | Long | |
-
-### `study_sessions`
-| Column | Type | Notes |
-|---|---|---|
-| `id` | Long (PK) | autoGenerate |
-| `userId` | Long | FK → users.id (CASCADE) |
-| `subjectId` | Long? | FK → subjects.id (SET NULL) |
-| `startedAt` | Long | epoch millis |
-| `durationMinutes` | Int | |
-| `notes` | String? | |
+## Play Store Preparation
+*   **Signed APK:** A signed APK has been generated and is included in this repository.
+*   **Play Console:** App assets, icons, and screenshots have been prepared for Google Play Console upload.
 
 ---
 
 ## Getting Started
-
-### Prerequisites
-
-- **Android Studio** Hedgehog (2023.1.1) or newer
-- **JDK 17** (bundled with recent Android Studio)
-- **Android SDK 34**
-- A physical Android device (recommended) or an emulator running **API 26+**
-
-### Import
-
-1. Open **Android Studio**
-2. **File → Open** and select the `StudyFlow/` project folder
-3. Wait for the initial **Gradle Sync** to complete
-4. Accept any SDK download prompts
-
----
-
-## Building & Running
-
-### Debug build
-
-```bash
-./gradlew :app:assembleDebug
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/[YourUsername]/StudyFlow.git
+   ```
+2. Open the project in Android Studio.
+3. **Firebase Setup:** You will need to connect your own `google-services.json` file from Firebase to run the SSO and Firestore features.
+4. Sync Gradle files and run on an Android device (API 26+).
+5. To build the debug APK via terminal:
+   ```bash
+   ./gradlew assembleDebug
+   ```
 ```
-
-Install on a connected device:
-
-```bash
-./gradlew :app:installDebug
-```
-
-Or from Android Studio: click the green **Run ▶** button.
-
-### Release build
-
-```bash
-./gradlew :app:assembleRelease
-```
-
-Output APK:
-```
-app/build/outputs/apk/release/app-release-unsigned.apk
-```
-
-> Release signing is not configured yet.
-
-### Clean build
-
-```bash
-./gradlew clean :app:assembleDebug
-```
-
----
-
-## Testing the App
-
-### First-time flow
-
-1. **Launch** → splash plays (~1.6 s)
-2. **Register** → enter any email + a password ≥ 6 chars
-3. **Auto-login** → lands on Home
-
-### Manual test checklist
-
-| Area | Steps |
-|---|---|
-| **Auth** | Register → Log out → Log back in. Force-close and reopen — should auto-login. |
-| **Tasks** | Add 3 tasks with different priorities. Toggle one complete. Filter to **Done**. Delete one. |
-| **Subjects** | Add 2 subjects with different colours. Tap to edit. Delete one. |
-| **Study** | Log a 25 min session. Verify **Today** counter updates. Delete the session. |
-| **Settings** | Change daily goal to 90, language to isiZulu, save. |
-| **Persistence** | Force-close app and reopen — all data must still be there. |
-
-### Unit tests
-
-```bash
-./gradlew :app:testDebugUnitTest
-```
-
-### Instrumented tests
-
-```bash
-./gradlew :app:connectedDebugAndroidTest
-```
-
----
-
-## Version Compatibility
-
-StudyFlow uses a stable, known-good combination. **Do not upgrade any of
-these in isolation** — they must move together.
-
-| Component | Version | Notes |
-|---|---|---|
-| Android Gradle Plugin | 8.5.2 | |
-| Gradle | 8.7 (wrapper) | Must be 8.x for AGP 8.5 |
-| Kotlin | 2.0.21 | Compatible with AGP 8.5 |
-| KSP | 2.0.21-1.0.28 | Must match Kotlin version exactly |
-| Compose BOM | 2024.09.00 | |
-| Room | 2.6.1 | |
-| Min SDK | 26 | |
-| Compile / Target SDK | 34 | |
-| JVM target | 17 | |
-
-### Common pitfalls
-
-- **Do NOT accept the "Upgrade to Gradle 9.x"** recommendation from Android Studio.
-  AGP 8.5.2 does not support Gradle 9.x.
-- **Do NOT use kapt** — StudyFlow uses **KSP** for Room's annotation processing.
-  If you see `kaptDebugKotlin` in the build log, you've regressed.
-- **Do NOT change the KSP version** independently of the Kotlin version — they
-  must always match.
-
----
-
-## Roadmap
-
-- [ ] **Task ↔ Subject foreign key linking** (replace free-text `subject` on `TaskEntity`)
-- [ ] **Notifications** for approaching deadlines (WorkManager + AlarmManager)
-- [ ] **Gamification** — points, streaks, achievements screen
-- [ ] **Weekly dashboard charts** (study minutes per day)
-- [ ] **Full multilingual resources** (`values-zu/strings.xml`, `values-st/strings.xml`)
-- [ ] **Google Single Sign-On** (final PoE version)
-- [ ] **REST API integration** — Node.js + Express on Render, MongoDB Atlas, Retrofit + offline sync
-- [ ] **Firebase Cloud Messaging** for remote push notifications
-- [ ] **Cloud study resources** (Firebase Cloud Storage for PDF/image attachments)
-- [ ] **Dark/Light theme switching** at runtime
-- [ ] **Data export/import** (JSON backup of tasks and sessions)
-
----
-
-## Known Limitations
-
-- Passwords use salted SHA-256 for the prototype; production should use
-  **bcrypt** or **Argon2**.
-- `fallbackToDestructiveMigration()` is enabled — schema changes wipe the DB.
-- Language and theme preferences are stored per-user but **not yet applied**
-  to the UI at runtime.
-- Task `subject` is a free-text string; the Subjects module exists but is not
-  yet wired as a foreign key from tasks.
-- Only one active session at a time (single-row `session` table).
-- No network layer yet — the REST API integration is on the roadmap.
-
----
